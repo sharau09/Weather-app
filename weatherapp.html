@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .weather-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .weather-container h1 {
+            margin-bottom: 20px;
+        }
+        .weather-info {
+            font-size: 18px;
+        }
+        .temp {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ff5722;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .input-container {
+            margin-top: 20px;
+        }
+        .input-container input {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <h1>Weather App</h1>
+        <div id="weather-info" class="weather-info">
+            <p>Loading weather data...</p>
+        </div>
+        <div class="input-container">
+            <input type="text" id="location-input" placeholder="Enter city name">
+            <button class="button" onclick="getWeatherByCity()">Get Weather</button>
+        </div>
+        <button class="button" onclick="getWeather()">Get Current Location Weather</button>
+    </div>
+
+    <script>
+        // Define the OpenWeatherMap API key and URL
+        const apiKey = 'YOUR_API_KEY';  // Replace with your OpenWeatherMap API key
+        const apiUrl = 'https://api.openweathermap.org/data/2.5/weather';
+
+        // Function to get weather data by city name
+        function getWeatherByCity() {
+            const city = document.getElementById('location-input').value;
+            if (!city) {
+                alert('Please enter a city name');
+                return;
+            }
+            fetchWeatherData({ q: city });
+        }
+
+        // Function to get weather data by user's location
+        function getWeather() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    fetchWeatherData({ lat: latitude, lon: longitude });
+                }, error => {
+                    alert('Unable to retrieve your location');
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        // Function to fetch weather data from the API
+        function fetchWeatherData(params) {
+            const url = `${apiUrl}?${new URLSearchParams({
+                ...params,
+                appid: apiKey,
+                units: 'metric',  // Use 'imperial' for Fahrenheit
+            })}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => displayWeatherData(data))
+                .catch(error => alert('Error fetching weather data: ' + error));
+        }
+
+        // Function to display the weather data on the page
+        function displayWeatherData(data) {
+            const weatherInfo = document.getElementById('weather-info');
+            if (data.cod === '404') {
+                weatherInfo.innerHTML = '<p>City not found.</p>';
+                return;
+            }
+
+            const temp = data.main.temp;
+            const description = data.weather[0].description;
+            const city = data.name;
+            const country = data.sys.country;
+            const humidity = data.main.humidity;
+            const windSpeed = data.wind.speed;
+
+            weatherInfo.innerHTML = `
+                <p class="temp">${temp}°C</p>
+                <p>${description}</p>
+                <p>${city}, ${country}</p>
+                <p>Humidity: ${humidity}%</p>
+                <p>Wind Speed: ${windSpeed} m/s</p>
+            `;
+        }
+    </script>
+</body>
+</html>
